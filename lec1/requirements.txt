@@ -1,0 +1,10 @@
+numpy
+scipy
+jupyter
+ipython
+sklearn
+pandas
+gensim
+statsmodels
+matplotlib
+seaborn
