@@ -1,29 +1,35 @@
-from flask import Flask, jsonify, request
-import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import roc_auc_score
-from sklearn.feature_extraction.text import TfidfVectorizer
-import cPickle as pickle
+import pickle
 import logging
+
+
+from flask import Flask, jsonify, request
+
+
 app = Flask(__name__)
+
 
 @app.route('/student')
 def get_student_name():
-    return jsonify({'student': 'Fedorenko'})
+    return jsonify({'student': 'Your Name'})
 
-@app.route('/sentiment', methods=['POST'])
+
+@app.route('/sentiment', methods=['GET', 'POST'])
 def get_text_score():
-    try:
+    if request.method == 'GET':
+        text = request.args.get('text')
+    else:
         text = request.json.get('text', '')
-        L = pickle.load(open("logreg.pkl", "rb"))
-        tfidf = pickle.load(open("tf-idf.pkl", "rb"))
+    try:
+        print(text)
+        L = pickle.load(open("./artefacts/logreg.pkl", "rb"))
+        tfidf = pickle.load(open("./artefacts/tf-idf.pkl", "rb"))
+        params = pickle.load(open("./artefacts/params.pkl", "rb"))
         score = L.predict_proba(tfidf.transform([text]))[0][1]
-#        print score
+        sentiment = 'positive' if score > params['threshold'] else 'negative'
     except Exception as e:
         logging.error(str(e))
-        score = 0.0
-    return jsonify({'score': score})
+        score, sentiment = 0.0, 'unknown'
+    return jsonify({'score': score, 'sentiment': sentiment})
 
 
 if __name__ == '__main__':
